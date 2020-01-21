@@ -19,14 +19,15 @@ data X = X
 data Y = Y
 data Z = Z
 
-foo :: (ProjectError a X, ProjectError a Y) => Either a b
+foo :: (ProjectError err X, ProjectError err Y) => Either err String
 foo = do
     throw X
     throw Y
+    pure "hello world"
 
 fooOf
-    :: (e `OneOf` [X, Y, Z])
-    => Either e String
+    :: (err `OneOf` [X, Y, Z])
+    => Either err String
 fooOf = do
     throw X
     throw Z
@@ -37,7 +38,7 @@ fooOf'
     => Either (Either X e) String
 fooOf' = fooOf
 
-bar :: (ProjectError a Y, ProjectError a Z) => Either a b
+bar :: (ProjectError err Y, ProjectError err Z) => Either err String
 bar = catch foo $ \case
     Left X ->
         throw Z
@@ -48,12 +49,10 @@ bar' :: (ProjectError a Y, ProjectError a Z) => Either a b
 bar' = catchOne foo $ \X -> throw Z
 
 huh :: Either x String
-huh = catch (throw X) $ \case
-    X -> Right  "hello"
+huh = throw X `catch` \X -> Right  "hello"
 
 foo' :: (Monad m, ProjectError e X, ProjectError e Y) => ExceptT e m a
 foo' = promote foo
 
 foo'' :: (MonadError e m, ProjectError e X, ProjectError e Y) => m a
 foo'' = either throwError pure foo
-
