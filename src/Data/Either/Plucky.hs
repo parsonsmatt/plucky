@@ -7,7 +7,6 @@
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
--- |
 module Data.Either.Plucky where
 
 import           Control.Monad.Except
@@ -15,27 +14,18 @@ import           GHC.TypeLits
 
 class ProjectError s t where
     putError :: t -> s
-    getError :: s -> Maybe t
 
 instance {-# OVERLAPPABLE #-} (TypeError ('Text "No (remind me to write a better error message)")) => ProjectError a b where
     putError = undefined
-    getError = undefined
 
 instance {-# OVERLAPPABLE #-} ProjectError a a where
     putError = id
-    getError = Just
 
 instance {-# OVERLAPPING #-} ProjectError (Either a b) a where
     putError = Left
-    getError i = case i of
-       Left a -> Just a
-       Right _ -> Nothing
 
 instance {-# OVERLAPPABLE #-} (ProjectError b c) => ProjectError (Either a b) c where
     putError = Right . putError
-    getError i = case i of
-        Left _ -> Nothing
-        Right b -> getError b
 
 type family OneOf a as where
     OneOf a (x ': xs) = (ProjectError a x, OneOf a xs)
