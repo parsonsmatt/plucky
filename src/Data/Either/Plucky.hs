@@ -21,7 +21,7 @@
 -- directly.
 module Data.Either.Plucky where
 
-import           Control.Monad.Except
+import           Control.Monad.Trans.Except
 import           GHC.TypeLits
 
 -- | This type class is used to create the delegated values. It's an
@@ -444,7 +444,7 @@ rethrow :: e -> Either e a
 rethrow = Left
 
 promote :: Monad m => Either e a -> ExceptT e m a
-promote = either throwError pure
+promote = either throwE pure
 
 -- | Like 'catch', but promoted to the 'ExceptT' monad transformer.
 --

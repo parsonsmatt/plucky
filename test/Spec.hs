@@ -45,14 +45,14 @@ bar = catch foo $ \case
     Right a ->
         rethrow a
 
-bar' :: (ProjectError a Y, ProjectError a Z) => Either a b
+bar' :: (ProjectError a Y, ProjectError a Z) => Either a String
 bar' = catchOne foo $ \X -> throw Z
 
 huh :: Either x String
 huh = throw X `catch` \X -> Right  "hello"
 
-foo' :: (Monad m, ProjectError e X, ProjectError e Y) => ExceptT e m a
+foo' :: (Monad m, ProjectError e X, ProjectError e Y) => ExceptT e m String
 foo' = promote foo
 
-foo'' :: (MonadError e m, ProjectError e X, ProjectError e Y) => m a
+foo'' :: (MonadError e m, ProjectError e X, ProjectError e Y) => m String
 foo'' = either throwError pure foo
