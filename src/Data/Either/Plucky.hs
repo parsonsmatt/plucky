@@ -22,6 +22,7 @@
 module Data.Either.Plucky
     ( -- * Throwing Errors
       throw
+    , rethrow
     , throwT
       -- * Catching Errors
     , catch
@@ -461,9 +462,6 @@ catch e k = case e of
 rethrow :: e -> Either e a
 rethrow = Left
 
-promote :: Monad m => Either e a -> ExceptT e m a
-promote = either throwE pure
-
 -- | Like 'catch', but promoted to the 'ExceptT' monad transformer.
 --
 -- @since 0.0.0.0
@@ -504,3 +502,9 @@ catchOneT action handler = ExceptT $ do
 -- @since 0.0.0.0
 throwT :: (Monad m, ProjectError e' e) => e -> ExceptT e' m a
 throwT = ExceptT . pure . throw
+
+-- | Like 'rethrow', but promoted to the 'ExceptT' monad transformer.
+--
+-- @since 0.0.0.1
+rethrowT :: (Monad m) => e -> ExceptT e m a
+rethrowT = throwE
