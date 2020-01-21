@@ -411,7 +411,7 @@ catchOne e k = catch e $ \case
 -- @
 -- handlingTwoErrors :: 'OneOf' error [C] => 'Either' error 'String'
 -- handlingTwoErrors =
---     catch three $ \\error -> case error of
+--     catch three $ \\ error -> case error of
 --          'Left' A ->
 --              'pure' "It's an A"
 --          'Right' ('Left' B) ->
