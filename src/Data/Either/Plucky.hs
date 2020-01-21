@@ -141,7 +141,7 @@ instance {-# OVERLAPPABLE #-} ProjectError a a where
 --         Left err ->
 --             case err of
 --                 Left B -> print "It was B."
---                 Right other -> error "wasn't B\!"
+--                 Right other -> error "wasn't B!"
 --         Right msg ->
 --             putStrLn msg
 -- @
@@ -367,7 +367,7 @@ throw = Left . putError
 -- @
 -- handleThree :: ('OneOf' error [B, C]) => Either error String
 -- handleThree =
---     'catchOne' three $ \A -> pure "It was an A!"
+--     'catchOne' three $ \\A -> pure "It was an A!"
 -- @
 --
 -- If you want to rethrow the error with a different kind of exception, you
@@ -378,7 +378,7 @@ throw = Left . putError
 --
 -- aToZ :: ('OneOf' error [B, C, Z]) => Either error String
 -- aToZ =
---      'catchOne' three $ \A -> 'throw' Z
+--      'catchOne' three $ \\A -> 'throw' Z
 -- @
 --
 -- @since 0.0.0.0
@@ -411,7 +411,7 @@ catchOne e k = catch e $ \case
 -- @
 -- handlingTwoErrors :: 'OneOf' error [C] => 'Either' error 'String'
 -- handlingTwoErrors =
---     catch three $ \error -> case error of
+--     catch three $ \\error -> case error of
 --          'Left' A ->
 --              'pure' "It's an A"
 --          'Right' ('Left' B) ->
@@ -427,8 +427,8 @@ catchOne e k = catch e $ \case
 -- handlingTwoErrors :: 'OneOf' error [C] => 'Either' error 'String'
 -- handlingTwoErrors =
 --     'catchOne'
---         ('catchOne' three $ \A -> 'pure' "It's an A")
---         $ \B -> 'pure' "It's a B!"
+--         ('catchOne' three $ \\A -> 'pure' "It's an A")
+--         $ \\B -> 'pure' "It's a B!"
 -- @
 --
 -- TODO: Should this be the function that 'catch' refers to? Or should
@@ -447,7 +447,7 @@ catch e k = case e of
 --
 -- @
 -- handlingThree =
---      'catch' three $ \error ->
+--      'catch' three $ \\error ->
 --          case error of
 --              'Left' A ->
 --                  pure "It was an A."
