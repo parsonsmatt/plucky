@@ -1,7 +1,8 @@
-cabal-version: 1.12
+cabal-version:  1.12
 name:           plucky
 version:        0.0.0.0
 description:    Please see the README on GitHub at <https://github.com/parsonsmatt/plucky#readme>
+synopsis:       A library and technique for handling errors via plucking constraints
 homepage:       https://github.com/parsonsmatt/plucky#readme
 bug-reports:    https://github.com/parsonsmatt/plucky/issues
 author:         Matt Parsons
@@ -10,6 +11,7 @@ copyright:      2020 Matt Parsons
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
+category:       Data
 extra-source-files:
     README.md
     ChangeLog.md
