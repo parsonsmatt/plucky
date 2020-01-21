@@ -1,5 +1,7 @@
 # plucky
 
+[![Build Status](https://travis-ci.org/parsonsmatt/plucky.svg?branch=master)](https://travis-ci.org/parsonsmatt/plucky)
+
 Haskell [has a problem with problems](https://www.parsonsmatt.org/2018/11/03/trouble_with_typed_errors.html).
 We have `IO` exceptions for unchecked exceptions - the same sort that plague Ruby, Python, JavaScript, and other languages.
 We have `ExceptT` for checked exceptions, but Java has us beat on ergonomics and usability of checked exceptions.
