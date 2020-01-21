@@ -19,7 +19,24 @@
 -- not work with @mtl@'s 'MonadError', due to the functional dependency. So
 -- this is primarily useful in a concrete 'ExceptT' monad or with 'Either'
 -- directly.
-module Data.Either.Plucky where
+module Data.Either.Plucky
+    ( -- * Throwing Errors
+      throw
+    , throwT
+      -- * Catching Errors
+    , catch
+    , catchOne
+    , catchT
+    , catchOneT
+      -- * Concise Type Signature Helper
+    , OneOf(..)
+    -- * The magical internal guts!
+
+    -- | This type class has several instances that are well-documented and
+    -- describe how the library works and why. If you're curious about the
+    -- way this library works, read this up.
+    , ProjectError(..)
+    ) where
 
 import           Control.Monad.Trans.Except
 import           GHC.Exts
@@ -301,7 +318,7 @@ instance {-# OVERLAPPABLE #-} (TypeError ('Text "No (remind me to write a better
 -- defined to allow you to write:
 --
 -- @
--- three :: OneOf e [A, B, C] => Either e String
+-- three :: 'OneOf' e [A, B, C] => Either e String
 -- @
 --
 -- @since 0.0.0.0
@@ -310,11 +327,11 @@ type family OneOf a as :: Constraint where
     OneOf a '[] = ()
 
 -- | Use this to 'throw' an error in 'Either' and also promote it into some
--- big polymoprhic type.
+-- big polymorphic type.
 --
 -- @
 -- three
---     :: ('ProjectError' e A, 'ProjectError' e B, 'ProjectError' e C)
+--     :: ('OneOf' e [A, B, C])
 --     => Either e String
 -- three = do
 --     'throw' A
@@ -339,7 +356,7 @@ throw = Left . putError
 -- @
 -- data A = A
 --
--- three :: (error `OneOf` [A, B, C]) => Either error String
+-- three :: ('OneOf' error [A, B, C]) => Either error String
 -- @
 --
 -- At this point in our program logic, we can handle an @A@ just fine, but
@@ -347,9 +364,9 @@ throw = Left . putError
 -- 'catchOne', and in the handler function, we'll pattern match on @A@.
 --
 -- @
--- handleThree :: (error `OneOf` [B, C]) => Either error String
+-- handleThree :: ('OneOf' error [B, C]) => Either error String
 -- handleThree =
---     catchOne three $ \A -> pure "It was an A!"
+--     'catchOne' three $ \A -> pure "It was an A!"
 -- @
 --
 -- If you want to rethrow the error with a different kind of exception, you
@@ -358,9 +375,9 @@ throw = Left . putError
 -- @
 -- data Z = Z
 --
--- aToZ :: (error `OneOf` [B, C, Z]) => Either error String
+-- aToZ :: ('OneOf' error [B, C, Z]) => Either error String
 -- aToZ =
---      catchOne three $ \A -> throw Z
+--      'catchOne' three $ \A -> 'throw' Z
 -- @
 --
 -- @since 0.0.0.0
@@ -385,32 +402,32 @@ catchOne e k = catch e $ \case
 -- @
 -- data A = A
 --
--- three :: (error `OneOf` [A, B, C]) => Either error String
+-- three :: ('OneOf' error [A, B, C]) => Either error String
 -- @
 --
 -- We can handle the possibility of @A@ and @B@ at the same time:
 --
 -- @
--- handlingTwoErrors :: error `OneOf` [C] => Either error String
+-- handlingTwoErrors :: 'OneOf' error [C] => 'Either' error 'String'
 -- handlingTwoErrors =
 --     catch three $ \error -> case error of
---          Left A ->
---              pure "It's an A"
---          Right (Left B) ->
---              pure "It's a B"
---          Right (Right other) ->
---              rethrow other
+--          'Left' A ->
+--              'pure' "It's an A"
+--          'Right' ('Left' B) ->
+--              'pure' "It's a B"
+--          'Right' ('Right' other) ->
+--              'rethrow' other
 -- @
 --
 -- You will probably have an easier time using 'catchOne' sequentially,
 -- which would look like this:
 --
 -- @
--- handlingTwoErrors :: error `OneOf` [C] => Either error String
+-- handlingTwoErrors :: 'OneOf' error [C] => 'Either' error 'String'
 -- handlingTwoErrors =
---     catchOne
---         (catchOne three $ \A -> pure "It's an A")
---         $ \B -> pure "It's a B!"
+--     'catchOne'
+--         ('catchOne' three $ \A -> 'pure' "It's an A")
+--         $ \B -> 'pure' "It's a B!"
 -- @
 --
 -- TODO: Should this be the function that 'catch' refers to? Or should
@@ -429,12 +446,12 @@ catch e k = case e of
 --
 -- @
 -- handlingThree =
---      catch three $ \error ->
+--      'catch' three $ \error ->
 --          case error of
---              Left A ->
+--              'Left' A ->
 --                  pure "It was an A."
---              Right other ->
---                  rethrow other
+--              'Right' other ->
+--                  'rethrow' other
 -- @
 --
 -- In practice, you'll probably be using 'catchOne', and this won't be
@@ -460,6 +477,25 @@ catchT action handler = ExceptT $ do
     case ea of
         Left err ->
             runExceptT $ handler err
+        Right a ->
+            pure (Right a)
+
+
+-- | Like 'catchOne', but promoted to the 'ExceptT' monad transformer.
+--
+-- @since 0.0.0.1
+catchOneT
+    :: (Monad m)
+    => ExceptT (Either e e') m a
+    -> (e -> ExceptT e' m a)
+    -> ExceptT e' m a
+catchOneT action handler = ExceptT $ do
+    ea <- runExceptT action
+    case ea of
+        Left (Left err) ->
+            runExceptT $ handler err
+        Left (Right err) ->
+            pure (Left err)
         Right a ->
             pure (Right a)
 
