@@ -22,6 +22,7 @@
 module Data.Either.Plucky where
 
 import           Control.Monad.Trans.Except
+import           GHC.Exts
 import           GHC.TypeLits
 
 -- | This type class is used to create the delegated values. It's an
@@ -304,7 +305,7 @@ instance {-# OVERLAPPABLE #-} (TypeError ('Text "No (remind me to write a better
 -- @
 --
 -- @since 0.0.0.0
-type family OneOf a as where
+type family OneOf a as :: Constraint where
     OneOf a (x ': xs) = (ProjectError a x, OneOf a xs)
     OneOf a '[] = ()
 
