@@ -7,6 +7,7 @@
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
+
 -- | In <https://www.parsonsmatt.org/2020/01/03/plucking_constraints.html Plucking Constraints>,
 -- I described a technique where you can collect constraints and then pluck
 -- them off one-by-one. In order to pluck them off, you need a type class
@@ -20,6 +21,7 @@
 -- this is primarily useful in a concrete 'ExceptT' monad or with 'Either'
 -- directly.
 module Data.Either.Plucky
+    {-# DEPRECATED "This module is for documentation purposes only. Please use Data.Plucky.Or to express these ideas." #-}
     ( -- * Throwing Errors
       throw
     , rethrow
@@ -37,7 +39,8 @@ module Data.Either.Plucky
     -- describe how the library works and why. If you're curious about the
     -- way this library works, read this up.
     , ProjectError(..)
-    ) where
+    )
+        where
 
 import           Control.Monad.Trans.Except
 import           GHC.Exts
