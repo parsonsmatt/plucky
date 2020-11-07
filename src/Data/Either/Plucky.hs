@@ -30,7 +30,7 @@ module Data.Either.Plucky
     , catchT
     , catchOneT
       -- * Concise Type Signature Helper
-    , OneOf(..)
+    , OneOf
     -- * The magical internal guts!
 
     -- | This type class has several instances that are well-documented and
@@ -39,6 +39,7 @@ module Data.Either.Plucky
     , ProjectError(..)
     ) where
 
+import           Control.Monad.Error.Class
 import           Control.Monad.Trans.Except
 import           GHC.Exts
 import           GHC.TypeLits
@@ -344,8 +345,8 @@ type family OneOf a as :: Constraint where
 -- For 'ExceptT', see the variant 'throwT'.
 --
 -- @since 0.0.0.0
-throw :: ProjectError e' e => e -> Either e' x
-throw = Left . putError
+throw :: ( ProjectError e' e, MonadError e' m ) => e -> m x
+throw = throwError . putError
 
 -- | This function is useful to handle a single exception type among many.
 -- You pick which error you're going to handle by the handler function's
@@ -435,12 +436,12 @@ catchOne e k = catch e $ \case
 -- 'catchOne' be the guided case, and this is @catchAll@?
 --
 -- @since 0.0.0.0
-catch :: Either a b -> (a -> Either a' b) -> Either a' b
+catch :: MonadError a' m => Either a b -> (a -> m b) -> m b
 catch e k = case e of
     Left a  ->
         k a
     Right b ->
-        Right b
+        return b
 
 -- | When you're pattern matching on an unknown error, and you don't know
 -- how to handle it, you'll probably want to 'rethrow' it.
@@ -459,49 +460,49 @@ catch e k = case e of
 -- necessary.
 --
 -- @since 0.0.0.0
-rethrow :: e -> Either e a
-rethrow = Left
+rethrow :: MonadError e m => e -> m a
+rethrow = throwError
 
 -- | Like 'catch', but promoted to the 'ExceptT' monad transformer.
 --
 -- @since 0.0.0.0
 catchT
-    :: (Monad m)
+    :: (MonadError e' m)
     => ExceptT e m a
-    -> (e -> ExceptT e' m a)
-    -> ExceptT e' m a
-catchT action handler = ExceptT $ do
+    -> (e -> m a)
+    -> m a
+catchT action handler = do
     ea <- runExceptT action
     case ea of
         Left err ->
-            runExceptT $ handler err
+            handler err
         Right a ->
-            pure (Right a)
+            pure a
 
 
 -- | Like 'catchOne', but promoted to the 'ExceptT' monad transformer.
 --
 -- @since 0.0.0.1
 catchOneT
-    :: (Monad m)
+    :: (MonadError e' m)
     => ExceptT (Either e e') m a
-    -> (e -> ExceptT e' m a)
-    -> ExceptT e' m a
-catchOneT action handler = ExceptT $ do
+    -> (e -> m a)
+    -> m a
+catchOneT action handler = do
     ea <- runExceptT action
     case ea of
         Left (Left err) ->
-            runExceptT $ handler err
+            handler err
         Left (Right err) ->
-            pure (Left err)
+            throwError err
         Right a ->
-            pure (Right a)
+            pure a
 
 -- | Like 'throw', but promoted to the 'ExceptT' monad transformer.
 --
 -- @since 0.0.0.0
-throwT :: (Monad m, ProjectError e' e) => e -> ExceptT e' m a
-throwT = ExceptT . pure . throw
+throwT :: (MonadError e' m, ProjectError e' e) => e -> m a
+throwT = throw
 
 -- | Like 'rethrow', but promoted to the 'ExceptT' monad transformer.
 --
